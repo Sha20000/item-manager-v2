@@ -6,7 +6,7 @@ const itemRoutes = require('./routes/itemRoutes');
 
 const app = express();
 app.use(cors());
-
+app.use(express.json()); 
 app.get('/', (req, res) => res.send('Item Manager v2 API is running'));
 app.use('/api/items', itemRoutes);
 
