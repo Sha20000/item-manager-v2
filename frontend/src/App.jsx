@@ -6,36 +6,48 @@ import ItemList from './components/ItemList';
 export default function App() {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [error, setError] = useState('');
 
   const load = async () => {
-    const res = await API.get('/');
-    setItems(res.data);
+    try {
+      const res = await API.get('/');
+      setItems(res.data);
+    } catch (err) {
+      setError('Could not load items: ' + err.message);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const handleSave = async (data) => {
-    if (editingItem) {
-      // TODO 6a: update the item, then clear editingItem
-      await API.put(`${editingItem._id}`,data);
-      setEditingItem(null);
-
-
-    } else {
-      await API.post('/', data);
+    setError('');
+    try {
+      if (editingItem) {
+        await API.put(`/${editingItem._id}`, data);
+        setEditingItem(null);
+      } else {
+        await API.post('/', data);
+      }
+      load();
+    } catch (err) {
+      // show the backend's message on the page
+      setError(err.response?.data?.message || err.message);
     }
-    load();
   };
 
   const handleDelete = async (id) => {
-    // TODO 6b: delete the item and reload
-    await API.delete(`/${id}`);
-    load();
+    try {
+      await API.delete(`/${id}`);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    }
   };
 
   return (
     <div>
       <h1>Item Manager v2</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <ItemForm onSave={handleSave} editingItem={editingItem} onCancel={() => setEditingItem(null)} />
       <ItemList items={items} onEdit={setEditingItem} onDelete={handleDelete} />
     </div>
